@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mini Search Engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .search-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border-radius: 5px;
+        }
+        .search-box {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-options {
+            margin-top: 10px;
+        }
+        .result-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .result-title {
+            font-size: 18px;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        .result-snippet {
+            color: #555;
+        }
+        .result-score {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mini Search Engine</h1>
+    
+    <div class="search-container">
+        <input type="text" id="searchBox" class="search-box" placeholder="Enter your search query...">
+        <button onclick="performSearch()" class="search-button">Search</button>
+        
+        <div class="search-options">
+            <label><input type="radio" name="searchType" value="tf_idf" checked> TF-IDF</label>
+            <label><input type="radio" name="searchType" value="boolean"> Boolean</label>
+            <label><input type="radio" name="searchType" value="phrase"> Phrase</label>
+            <label><input type="radio" name="searchType" value="bm25"> BM25</label>
+            <label><input type="radio" name="searchType" value="zone"> Zone</label>
+            <label><input type="radio" name="searchType" value="tiered"> Tiered</label>
+            <label><input type="radio" name="searchType" value="expanded"> Query Expansion</label>
+        </div>
+    </div>
+    
+    <div id="loading" class="loading">
+        <p>Searching...</p>
+    </div>
+    
+    <div id="searchResults">
+        <!-- Results will be displayed here -->
+    </div>
+    
+    <script>
+        function performSearch() {
+            // Get search query and type
+            const query = document.getElementById('searchBox').value;
+            const searchType = document.querySelector('input[name="searchType"]:checked').value;
+            
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('searchResults').innerHTML = '';
+            
+            // Perform search via AJAX
+            fetch(`/search?query=${encodeURIComponent(query)}&type=${searchType}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    // Display results
+                    const resultsDiv = document.getElementById('searchResults');
+                    
+                    if (data.results.length === 0) {
+                        resultsDiv.innerHTML = '<p>No results found.</p>';
+                        return;
+                    }
+                    
+                    let resultsHtml = `<h2>Search Results (${data.results.length})</h2>`;
+                    
+                    data.results.forEach(result => {
+                        resultsHtml += `
+                            <div class="result-item">
+                                <div class="result-title">${result.title}</div>
+                                <div class="result-snippet">${result.snippet}</div>
+                                <div class="result-score">Score: ${result.score.toFixed(4)}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsDiv.innerHTML = resultsHtml;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('searchResults').innerHTML = 
+                        '<p>An error occurred while searching. Please try again.</p>';
+                });
+        }
+        
+        // Allow pressing Enter key to search
+        document.getElementById('searchBox').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>
+    
